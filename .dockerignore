@@ -1,0 +1,8 @@
+server.log
+server.err.log
+deploy
+*.zip
+*.log
+.git
+.gitignore
+nginx.conf

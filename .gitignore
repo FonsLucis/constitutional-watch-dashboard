@@ -1,0 +1,8 @@
+*.log
+*.zip
+.env
+.env.*
+deploy/
+deploy-backend/
+deploy-dynamic/
+storage/*.tmp

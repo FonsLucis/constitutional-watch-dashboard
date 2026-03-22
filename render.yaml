@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: constitutional-watch-dashboard
+    runtime: docker
+    plan: starter
+    region: singapore
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: HOST
+        value: "0.0.0.0"
+      - key: STORAGE_DIR
+        value: /app/storage
+      - key: NODE_ENV
+        value: production
+    disk:
+      name: citizen-data
+      mountPath: /app/storage
+      sizeGB: 5

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>이재명 정부 국제표준 모니터</title>
+  <meta
+    name="description"
+    content="이재명 정부를 자유민주주의 헌정질서 기준, 자유민주권 외신 기준, 국민 원자료로 감시하는 정보형 대시보드."
+  >
+  <link rel="stylesheet" href="styles.css">
+  <!-- SERVER_BOOTSTRAP -->
+  <script src="data.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <nav class="section-quick-nav" aria-label="섹션 바로가기">
+    <a class="section-quick-link" href="#top" data-section-link="top">상단</a>
+    <a class="section-quick-link" href="#dashboard" data-section-link="dashboard">개요</a>
+    <a class="section-quick-link" href="#source-gate" data-section-link="source-gate">소스</a>
+    <a class="section-quick-link" href="#legal-frame" data-section-link="legal-frame">요건</a>
+    <a class="section-quick-link" href="#response-ladder" data-section-link="response-ladder">대응</a>
+    <a class="section-quick-link" href="#monitoring-matrix" data-section-link="monitoring-matrix">지표</a>
+    <a class="section-quick-link" href="#citizen-desk" data-section-link="citizen-desk">참여</a>
+    <a class="section-quick-link" href="#community" data-section-link="community">커뮤</a>
+    <a class="section-quick-link" href="#evidence-stream" data-section-link="evidence-stream">피드</a>
+    <a class="section-quick-link" href="#sources-method" data-section-link="sources-method">출처</a>
+  </nav>
+  <div class="page-shell">
+    <header class="hero" id="top">
+      <div class="hero-copy">
+        <p class="eyebrow">Lee Administration Monitor</p>
+        <h1>이재명 정부 국제표준 모니터</h1>
+        <p class="hero-summary">
+          이 대시보드는 2025년 6월 4일 출범한 이재명 정부를 감시 대상으로 삼습니다. 국내 언론·사법·입법·행정·정치권 자료는 상태판단에서
+          제외하고, 자유민주주의 헌정질서 기준, 자유민주권 외신 기준, 국제지표, 국민 원자료만으로 현재 정부의 자유민주헌정질서 훼손 여부를 읽는
+          제로트러스트 모델입니다.
+        </p>
+        <div class="hero-meta">
+          <span id="last-updated"></span>
+          <span id="data-status"></span>
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="hero-callout">
+          <p class="callout-label">현재 판정</p>
+          <strong id="hero-verdict"></strong>
+          <p id="hero-verdict-detail"></p>
+        </div>
+        <div class="hero-note">
+          <p class="callout-label">운영 원칙</p>
+          <p>
+            이 대시보드는 폭력, 방화, 시설 파괴, 무장, 보복, 허위정보 유포를 지시하거나 정당화하지 않습니다. 실행 파트는 합법적 시민대응
+            프로토콜만 제시합니다.
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel" id="dashboard">
+        <div class="section-head">
+          <p class="section-kicker">Snapshot</p>
+          <h2>현재 상황 한눈에 보기</h2>
+          <p>
+            숫자는 법적 결론이 아니라, 현 정부에 대한 국제 기준 위반 징후를 운영상 점검한 값입니다. 단일 기사, 단일 판결, 단일 기관 발표로는
+            점수가 바뀌지 않으며, 국제 규범 매핑과 외부 독립 소스의 교차일치가 있을 때만 반영합니다.
+          </p>
+        </div>
+        <div class="score-grid" id="score-grid"></div>
+        <div class="verdict-grid">
+          <div class="verdict-ring-wrap">
+            <div class="verdict-ring" id="verdict-ring" aria-hidden="true">
+              <div class="verdict-ring-inner">
+                <span class="ring-number" id="trigger-score"></span>
+                <span class="ring-label">요건 충족도</span>
+              </div>
+            </div>
+          </div>
+          <div class="verdict-copy">
+            <p class="section-kicker">Assessment</p>
+            <h3 id="verdict-title"></h3>
+            <p id="verdict-summary"></p>
+            <ul id="verdict-points" class="plain-list"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="source-gate">
+        <div class="section-head">
+          <p class="section-kicker">Institution Weighting</p>
+          <h2>제로트러스트 소스 게이트</h2>
+          <p>
+            이 대시보드는 국내 제도기관 자료를 상태판단의 근거로 쓰지 않습니다. 허용되는 근거는 자유민주주의 헌정질서를 구성하는 보편 자유권 기준, 자유민주권 외신,
+            국제 연구기관 지표, 검증 가능한 국민 원자료뿐입니다. 기사 한 건이 아니라 규범 위반 매핑과 독립 소스 다중 확인이 핵심입니다.
+          </p>
+        </div>
+        <div class="criteria-grid" id="trust-grid"></div>
+      </section>
+
+      <section class="panel" id="legal-frame">
+        <div class="section-head">
+          <p class="section-kicker">Legal Frame</p>
+          <h2>국민저항권 발동 조건 정의</h2>
+          <p>
+            아래 기준은 자유민주주의 헌정질서를 구성하는 보편 자유권 기준과 자유민주권의 통용 규범을 바탕으로 구성한 실무형 판단 프레임워크입니다. 국내 기사, 판결,
+            정치권 해석은 근거에 넣지 않고, 국제표준과 국민 원자료를 우선합니다.
+          </p>
+        </div>
+        <div class="criteria-grid" id="criteria-grid"></div>
+      </section>
+
+      <section class="panel dual-panel" id="response-ladder">
+        <div>
+          <div class="section-head">
+            <p class="section-kicker">Lawful Response Ladder</p>
+          <h2>합법적 실행 프로토콜</h2>
+          <p>
+            실행은 제도 밖의 무력행동이 아니라, 원자료 보존, 국제 기준 매핑, 외부 검증, 비폭력 시민행동 중심으로 재구성했습니다.
+          </p>
+        </div>
+          <div class="response-grid" id="response-grid"></div>
+        </div>
+        <aside class="danger-card">
+          <p class="section-kicker">Hard Stop</p>
+          <h3>플랫폼에서 금지하는 행위</h3>
+          <ul id="prohibited-list" class="plain-list"></ul>
+        </aside>
+      </section>
+
+      <section class="panel" id="monitoring-matrix">
+        <div class="section-head">
+          <p class="section-kicker">Monitoring Matrix</p>
+          <h2>실시간 관찰 지표</h2>
+          <p>
+            요건을 직접 구성하는 것은 현 정부 하에서의 헌정질서 침해와 권리보호 약화 여부입니다. 아래 지표는 국제표준 위반, 외신 교차일치,
+            국민 원자료 검증률을 중심으로 설계되어 있으며, 국내 기관 발표는 점수에 넣지 않습니다.
+          </p>
+        </div>
+        <div class="indicator-grid" id="indicator-grid"></div>
+      </section>
+
+      <section class="panel" id="citizen-desk">
+        <div class="section-head">
+          <p class="section-kicker">Citizen Desk</p>
+          <h2>국민 참여형 근거 수집</h2>
+          <p>
+            시민은 사건의 원자료와 현장 맥락을 가장 먼저 확보할 수 있습니다. 다만 제보는 단순 주장 접수가 아니라 원본 보존, 위치·시각 확인,
+            개인정보 비노출, 교차검증 가능성을 갖춘 자료만 운영 큐에 올리도록 설계해야 합니다.
+          </p>
+        </div>
+
+        <div class="citizen-grid">
+          <article class="citizen-card citizen-guide">
+            <p class="card-kicker">Participation Rules</p>
+            <h3>제보 전 확인</h3>
+            <div class="citizen-rule-block">
+              <h4>제보 원칙</h4>
+              <ul class="plain-list" id="participation-rules"></ul>
+            </div>
+            <div class="citizen-rule-block">
+              <h4>운영 흐름</h4>
+              <ol class="rule-list" id="participation-steps"></ol>
+            </div>
+            <p class="citizen-note">
+              제보는 이 브라우저의 로컬 저장소에만 임시 저장됩니다. 서버 전송은 아직 붙어 있지 않으므로, 운영자가 내보내기 후 별도 검증 큐로
+              옮겨야 합니다.
+            </p>
+          </article>
+
+          <article class="citizen-card citizen-form-card">
+            <p class="card-kicker">Report Intake</p>
+            <h3>시민 제보 등록</h3>
+            <form id="citizen-report-form" class="citizen-form">
+              <div class="form-grid">
+                <label class="field">
+                  <span>분류</span>
+                  <select id="report-category" required></select>
+                </label>
+                <label class="field">
+                  <span>공개 수준</span>
+                  <select id="report-exposure" required></select>
+                </label>
+                <label class="field field-wide">
+                  <span>제보 제목</span>
+                  <input id="report-title" type="text" maxlength="120" placeholder="예: 집회 현장 채증과 신원확인 요구" required>
+                </label>
+                <label class="field">
+                  <span>발생 시각</span>
+                  <input id="report-observed-at" type="datetime-local" required>
+                </label>
+                <label class="field">
+                  <span>장소</span>
+                  <input id="report-location" type="text" maxlength="120" placeholder="예: 서울 중구 세종대로">
+                </label>
+                <label class="field field-wide">
+                  <span>원본 링크</span>
+                  <input id="report-source-url" type="url" placeholder="원본 게시물, 영상, 문서 URL">
+                </label>
+                <label class="field field-wide">
+                  <span>백업 또는 미러 링크</span>
+                  <input id="report-mirror-url" type="url" placeholder="IPFS, 별도 저장소, 백업 URL">
+                </label>
+                <label class="field">
+                  <span>연락용 별칭</span>
+                  <input id="report-alias" type="text" maxlength="40" placeholder="실명 대신 별칭">
+                </label>
+                <label class="field">
+                  <span>원본 파일 메모</span>
+                  <input id="report-file-note" type="text" maxlength="80" placeholder="예: IMG_2401.MOV 보유">
+                </label>
+                <label class="field field-wide">
+                  <span>사건 요약</span>
+                  <textarea id="report-summary" rows="5" maxlength="1000" placeholder="무슨 일이 있었는지, 누가 무엇을 했는지, 어떤 권리 침해가 의심되는지" required></textarea>
+                </label>
+                <label class="field field-wide">
+                  <span>검증 메모</span>
+                  <textarea id="report-evidence-note" rows="4" maxlength="800" placeholder="촬영 위치, 메타데이터, 다각도 영상, 현장 목격자, 국제 기준 매핑 메모"></textarea>
+                </label>
+              </div>
+
+              <fieldset class="verification-box">
+                <legend>검증 체크</legend>
+                <div class="check-grid">
+                  <label><input type="checkbox" name="verification_check" value="원본 파일 보유"> 원본 파일 보유</label>
+                  <label><input type="checkbox" name="verification_check" value="원본 링크 확보"> 원본 링크 확보</label>
+                  <label><input type="checkbox" name="verification_check" value="시각 확인"> 시각 확인</label>
+                  <label><input type="checkbox" name="verification_check" value="장소 확인"> 장소 확인</label>
+                  <label><input type="checkbox" name="verification_check" value="독립 보조근거 존재"> 독립 보조근거 존재</label>
+                  <label><input type="checkbox" name="verification_check" value="개인정보 제거 또는 비공개 처리"> 개인정보 제거 또는 비공개 처리</label>
+                </div>
+              </fieldset>
+
+              <div class="form-actions">
+                <button class="action-button" type="submit">제보 저장</button>
+                <button class="ghost-button" type="reset">초기화</button>
+              </div>
+              <p id="report-form-status" class="form-status" aria-live="polite"></p>
+            </form>
+          </article>
+        </div>
+
+        <div class="access-grid">
+          <article class="citizen-card access-card">
+            <p class="card-kicker">Review Access</p>
+            <h3>검토자 로그인</h3>
+            <p class="citizen-note">
+              익명 제보는 로그인 없이 가능하지만, 검증 상태를 바꾸는 표결과 운영 큐 제어는 로그인된 검토자 또는 운영자만 수행합니다.
+            </p>
+            <ul class="plain-list" id="auth-rules"></ul>
+            <div class="auth-summary" id="auth-summary"></div>
+            <form id="review-login-form" class="citizen-form auth-form">
+              <div class="form-grid">
+                <label class="field">
+                  <span>표시 이름</span>
+                  <input id="auth-alias" type="text" maxlength="30" placeholder="예: field-review-1" required>
+                </label>
+                <label class="field">
+                  <span>권한</span>
+                  <select id="auth-role-target" required></select>
+                </label>
+                <label class="field field-wide">
+                  <span>접근 키</span>
+                  <input id="auth-access-key" type="text" maxlength="80" placeholder="로컬 테스트 키 입력" required>
+                </label>
+              </div>
+              <div class="form-actions">
+                <button class="action-button" type="submit">로그인</button>
+                <button class="ghost-button" id="auth-logout" type="button">로그아웃</button>
+              </div>
+              <p id="auth-form-status" class="form-status" aria-live="polite"></p>
+            </form>
+            <div class="demo-key-list" id="auth-demo-keys"></div>
+          </article>
+
+          <article class="citizen-card access-card">
+            <p class="card-kicker">Audit Trail</p>
+            <h3>감사 로그</h3>
+            <p class="citizen-note">
+              로그인, 공개 전환, 표결, 메모 추가 같은 민감 동작은 로컬 감사 로그에 남겨 조작과 운영 개입 흔적을 추적합니다.
+            </p>
+            <div class="queue-stats" id="audit-stats"></div>
+            <div class="audit-list" id="audit-list"></div>
+          </article>
+        </div>
+
+        <div class="citizen-queue">
+          <div class="queue-head">
+            <div>
+              <p class="card-kicker">Local Queue</p>
+              <h3>로컬 제보 큐</h3>
+            </div>
+            <div class="queue-actions">
+              <button id="export-reports" class="ghost-button" type="button">JSON 내보내기</button>
+              <button id="clear-reports" class="ghost-button danger-ghost" type="button">로컬 큐 비우기</button>
+            </div>
+          </div>
+          <div class="queue-stats" id="citizen-stats"></div>
+          <div class="citizen-report-list" id="citizen-report-list"></div>
+        </div>
+
+        <div class="public-board">
+          <div class="queue-head">
+            <div>
+              <p class="card-kicker">Public Verification</p>
+              <h3>익명 공개 검증 보드</h3>
+            </div>
+          </div>
+          <ul class="public-rule-list" id="public-verification-rules"></ul>
+          <div class="queue-stats" id="public-board-stats"></div>
+          <div class="citizen-report-list" id="public-board-list"></div>
+        </div>
+      </section>
+
+      <section class="panel community-panel" id="community">
+        <div class="section-head">
+          <p class="section-kicker">Community</p>
+          <h2>익명 자유게시판</h2>
+          <p>
+            이 영역은 근거 검증 보드와 분리된 커뮤니티 공간입니다. 익명 문제제기, 자료 요청, 패턴 정리, 운영 제안을 남기고 다른 참여자들이
+            공감, 근거 보완, 추가 추적 필요 반응을 남길 수 있습니다.
+          </p>
+        </div>
+        <div class="anonymous-board">
+          <div class="board-grid">
+            <article class="citizen-card board-form-card">
+              <p class="card-kicker">Anonymous Post</p>
+              <h3>익명 글 쓰기</h3>
+              <ul class="plain-list" id="anonymous-board-rules"></ul>
+              <form id="anonymous-board-form" class="citizen-form">
+                <div class="form-grid">
+                  <label class="field">
+                    <span>분류</span>
+                    <select id="board-category" required></select>
+                  </label>
+                  <label class="field">
+                    <span>표시 별칭</span>
+                    <input id="board-alias" type="text" maxlength="24" placeholder="비워두면 익명">
+                  </label>
+                  <label class="field field-wide">
+                    <span>제목</span>
+                    <input id="board-title" type="text" maxlength="100" placeholder="예: 특정 패턴을 장기 추적할 필요가 있음" required>
+                  </label>
+                  <label class="field">
+                    <span>태그</span>
+                    <input id="board-tag" type="text" maxlength="24" placeholder="예: 언론, 검열, 집회">
+                  </label>
+                  <label class="field field-wide">
+                    <span>본문</span>
+                    <textarea id="board-body" rows="5" maxlength="1200" placeholder="문제의식, 질문, 자료 요청, 후속 추적 포인트를 익명으로 적어주세요." required></textarea>
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <button class="action-button" type="submit">익명 글 등록</button>
+                  <button class="ghost-button" type="reset">초기화</button>
+                </div>
+                <p id="board-form-status" class="form-status" aria-live="polite"></p>
+              </form>
+            </article>
+
+            <article class="citizen-card board-list-card">
+              <p class="card-kicker">Board Feed</p>
+              <h3>익명 게시글 목록</h3>
+              <div class="queue-stats" id="board-stats"></div>
+              <div class="board-post-list" id="board-list"></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="evidence-stream">
+        <div class="section-head">
+          <p class="section-kicker">Evidence Stream</p>
+          <h2>근거 수집 피드</h2>
+          <p>
+            국제 규범, 국제 지표, 외신 편집원칙, 국민 원자료 검증 규칙을 한 화면에서 추적합니다. 단일 외신 기사도 결론 근거가 아니며, 원본
+            링크와 다중 검증이 없으면 점수에 반영하지 않습니다.
+          </p>
+        </div>
+        <div class="feed-toolbar">
+          <div class="filter-row" id="filter-row"></div>
+          <label class="search-field">
+            <span>검색</span>
+            <input id="feed-search" type="search" placeholder="제목 또는 요약 검색">
+          </label>
+        </div>
+        <div class="feed-list" id="feed-list"></div>
+      </section>
+
+      <section class="panel source-panel" id="sources-method">
+        <div class="section-head">
+          <p class="section-kicker">Sources & Method</p>
+          <h2>출처와 점수 산정 방식</h2>
+          <p>
+            사이트의 초깃값은 2026년 3월 21일 기준 공개 자료를 반영한 샘플입니다. 실제 배포 단계에서는 RSS, API, 수기 검증 큐를 연결해
+            자동 갱신할 수 있도록 데이터 구조를 분리해 두었습니다. 현재 버전은 이재명 정부 출범 이후를 감시 구간으로 잡은 국제표준 우선 모드입니다.
+          </p>
+        </div>
+        <div class="source-layout">
+          <div class="source-list" id="source-list"></div>
+          <div class="method-card">
+            <h3>운영 규칙</h3>
+            <ol class="rule-list">
+              <li>국내 언론, 사법, 입법, 행정, 정치권 발표는 상태판단 점수에 넣지 않습니다.</li>
+              <li>국제 기준 문서와 국제 연구지표가 1차 기준이며, 외신은 보조적 교차검증 자료로만 사용합니다.</li>
+              <li>외신도 소유구조 불투명, 국가·정당 영향권, 편집 독립성 불명확 매체는 제외하거나 감점합니다.</li>
+              <li>SNS 캡처 이미지는 증거가 아니며, 원본 URL, 게시 시각, 촬영 위치, 메타데이터 또는 복수 각도 영상이 필요합니다.</li>
+              <li>정치적 불만, 다수결 패배, 특정 정당 혐오만으로는 발동 요건이 성립하지 않습니다.</li>
+              <li>단일 기사, 단일 발언, 단일 바이럴 영상으로는 점수를 바꾸지 않습니다.</li>
+              <li>본 페이지는 법률 자문이 아니며, 연구·감시·기록 목적의 시민용 운영 대시보드입니다.</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>
+        이 시안은 이재명 정부 출범 이후의 상황을 국제표준과 외부 독립 검증 기준으로 감시하도록 설계했습니다.
+      </p>
+    </footer>
+  </div>
+</body>
+</html>
