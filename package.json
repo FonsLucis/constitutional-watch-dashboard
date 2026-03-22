@@ -5,6 +5,11 @@
   "description": "Node-backed deployment for the constitutional watch dashboard",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "check": "node --check storage.js && node --check server.js && node --check app.js && node --check data.js"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "^13.3.0",
+    "pg": "^8.20.0"
   }
 }

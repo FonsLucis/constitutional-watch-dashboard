@@ -19,6 +19,19 @@
       reports: [],
       boardPosts: [],
       auditLog: [],
+      auth: {
+        backend: "file",
+        mode: "passkey",
+        counts: {
+          reviewer: 0,
+          operator: 0
+        },
+        registration: {
+          reviewer: { enabled: false, inviteRequired: true },
+          operator: { enabled: false, inviteRequired: true }
+        },
+        session: null
+      },
       updatedAt: "",
       pollHandle: null
     }
@@ -62,6 +75,8 @@
   const authRoleTarget = byId("auth-role-target");
   const authLogoutButton = byId("auth-logout");
   const authDemoKeys = byId("auth-demo-keys");
+  const authAliasInput = byId("auth-alias");
+  const authAccessKeyInput = byId("auth-access-key");
   const auditStats = byId("audit-stats");
   const auditList = byId("audit-list");
   const anonymousBoardRules = byId("anonymous-board-rules");
@@ -83,9 +98,11 @@
 
   const refreshDataStatus = () => {
     const suffix = isBackendMode()
-      ? deploymentContext && deploymentContext.kind === "dynamic-node"
-        ? " / 동적 배포(Node)"
-        : " / Node 공유 백엔드"
+      ? getAuthState().backend === "postgres"
+        ? " / 동적 배포(Node + Postgres)"
+        : deploymentContext && deploymentContext.kind === "dynamic-node"
+          ? " / 동적 배포(Node)"
+          : " / Node 공유 백엔드"
       : " / 로컬 프로토타입";
     fillText("data-status", `${data.meta.status}${suffix}`);
   };
@@ -145,6 +162,120 @@
     return `report-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   };
 
+  const getAuthState = () => {
+    return state.shared.auth && typeof state.shared.auth === "object"
+      ? state.shared.auth
+      : {
+          backend: "file",
+          mode: "passkey",
+          counts: { reviewer: 0, operator: 0 },
+          registration: {
+            reviewer: { enabled: false, inviteRequired: true },
+            operator: { enabled: false, inviteRequired: true }
+          },
+          session: null
+        };
+  };
+
+  const isPasskeySupported = () => {
+    return Boolean(window.PublicKeyCredential && window.navigator.credentials && window.isSecureContext);
+  };
+
+  const base64UrlToArrayBuffer = (value) => {
+    const base64 = String(value || "")
+      .replaceAll("-", "+")
+      .replaceAll("_", "/")
+      .padEnd(Math.ceil(String(value || "").length / 4) * 4, "=");
+    const binary = window.atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+    return bytes.buffer;
+  };
+
+  const arrayBufferToBase64Url = (buffer) => {
+    const bytes = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : new Uint8Array(buffer.buffer);
+    let binary = "";
+    bytes.forEach((byte) => {
+      binary += String.fromCharCode(byte);
+    });
+    return window.btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+  };
+
+  const parseCreationOptions = (options) => {
+    if (window.PublicKeyCredential && typeof window.PublicKeyCredential.parseCreationOptionsFromJSON === "function") {
+      return window.PublicKeyCredential.parseCreationOptionsFromJSON(options);
+    }
+
+    return {
+      ...options,
+      challenge: base64UrlToArrayBuffer(options.challenge),
+      user: {
+        ...options.user,
+        id: base64UrlToArrayBuffer(options.user.id)
+      },
+      excludeCredentials: Array.isArray(options.excludeCredentials)
+        ? options.excludeCredentials.map((credential) => ({
+            ...credential,
+            id: base64UrlToArrayBuffer(credential.id)
+          }))
+        : []
+    };
+  };
+
+  const parseRequestOptions = (options) => {
+    if (window.PublicKeyCredential && typeof window.PublicKeyCredential.parseRequestOptionsFromJSON === "function") {
+      return window.PublicKeyCredential.parseRequestOptionsFromJSON(options);
+    }
+
+    return {
+      ...options,
+      challenge: base64UrlToArrayBuffer(options.challenge),
+      allowCredentials: Array.isArray(options.allowCredentials)
+        ? options.allowCredentials.map((credential) => ({
+            ...credential,
+            id: base64UrlToArrayBuffer(credential.id)
+          }))
+        : []
+    };
+  };
+
+  const credentialToJson = (credential) => {
+    if (credential && typeof credential.toJSON === "function") {
+      return credential.toJSON();
+    }
+
+    const base = {
+      id: credential.id,
+      rawId: arrayBufferToBase64Url(credential.rawId),
+      type: credential.type,
+      authenticatorAttachment: credential.authenticatorAttachment,
+      clientExtensionResults: credential.getClientExtensionResults ? credential.getClientExtensionResults() : {}
+    };
+
+    if (window.AuthenticatorAttestationResponse && credential.response instanceof window.AuthenticatorAttestationResponse) {
+      return {
+        ...base,
+        response: {
+          clientDataJSON: arrayBufferToBase64Url(credential.response.clientDataJSON),
+          attestationObject: arrayBufferToBase64Url(credential.response.attestationObject),
+          transports: credential.response.getTransports ? credential.response.getTransports() : []
+        }
+      };
+    }
+
+    return {
+      ...base,
+      response: {
+        clientDataJSON: arrayBufferToBase64Url(credential.response.clientDataJSON),
+        authenticatorData: arrayBufferToBase64Url(credential.response.authenticatorData),
+        signature: arrayBufferToBase64Url(credential.response.signature),
+        userHandle: credential.response.userHandle ? arrayBufferToBase64Url(credential.response.userHandle) : undefined
+      }
+    };
+  };
+
   const applyBootstrapPayload = (payload) => {
     if (!payload || typeof payload !== "object") {
       return false;
@@ -157,6 +288,7 @@
     state.shared.reports = Array.isArray(payload.reports) ? payload.reports.map(normalizeReport) : [];
     state.shared.boardPosts = Array.isArray(payload.boardPosts) ? payload.boardPosts.map(normalizeBoardPost) : [];
     state.shared.auditLog = Array.isArray(payload.auditLog) ? payload.auditLog : [];
+    state.shared.auth = payload.auth && typeof payload.auth === "object" ? payload.auth : getAuthState();
     state.shared.updatedAt = nextUpdatedAt;
     window.__BACKEND_SHARED__ = state.shared.backend;
     refreshDataStatus();
@@ -167,6 +299,7 @@
   const fetchJson = async (resource, options = {}) => {
     const requestOptions = {
       cache: "no-store",
+      credentials: "same-origin",
       ...options
     };
 
@@ -271,6 +404,10 @@
   };
 
   const getStoredSession = () => {
+    if (isBackendMode()) {
+      return getAuthState().session || null;
+    }
+
     try {
       const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
       const parsed = raw ? JSON.parse(raw) : null;
@@ -281,10 +418,26 @@
   };
 
   const saveStoredSession = (session) => {
+    if (isBackendMode()) {
+      state.shared.auth = {
+        ...getAuthState(),
+        session
+      };
+      return;
+    }
+
     window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
   };
 
   const clearStoredSession = () => {
+    if (isBackendMode()) {
+      state.shared.auth = {
+        ...getAuthState(),
+        session: null
+      };
+      return;
+    }
+
     window.localStorage.removeItem(SESSION_STORAGE_KEY);
   };
 
@@ -323,6 +476,10 @@
   };
 
   const appendAuditLog = async (action, detail, actor, reportId) => {
+    if (isBackendMode()) {
+      return;
+    }
+
     const session = actor || getStoredSession();
     const entry = {
       id: createId(),
@@ -333,14 +490,6 @@
       actorRole: session && session.role ? session.role : "public",
       createdAt: new Date().toISOString()
     };
-
-    if (isBackendMode()) {
-      await apiRequest("/api/audit-log", {
-        method: "POST",
-        body: { entry }
-      });
-      return;
-    }
 
     const entries = getStoredAuditLog();
     entries.unshift(entry);
@@ -912,13 +1061,10 @@
     }
 
     if (authDemoKeys) {
-      data.participation.accessControl.demoKeys.forEach((demoKey) => {
+      data.participation.accessControl.setupNotes.forEach((note) => {
         const item = document.createElement("div");
         item.className = "demo-key-item";
-        item.innerHTML = `
-          <span>${escapeHtml(demoKey.label)}</span>
-          <code>${escapeHtml(demoKey.value)}</code>
-        `;
+        item.innerHTML = `<span>${escapeHtml(note)}</span>`;
         authDemoKeys.appendChild(item);
       });
     }
@@ -954,9 +1100,14 @@
       return;
     }
 
+    const authState = getAuthState();
     const session = getStoredSession();
     const roleConfig = session ? getRoleConfig(session.role) : null;
     const canOperate = isOperatorSession(session);
+    const reviewerOpen = Boolean(authState.registration && authState.registration.reviewer && authState.registration.reviewer.enabled);
+    const operatorOpen = Boolean(authState.registration && authState.registration.operator && authState.registration.operator.enabled);
+    const passkeyReady = isPasskeySupported();
+    const countSummary = `운영자 ${authState.counts && authState.counts.operator ? authState.counts.operator : 0} / 검토자 ${authState.counts && authState.counts.reviewer ? authState.counts.reviewer : 0}`;
 
     if (exportReportsButton) {
       exportReportsButton.disabled = !canOperate;
@@ -970,8 +1121,14 @@
       authSummary.innerHTML = `
         <div class="auth-role-row">
           <span class="auth-badge viewer">비로그인</span>
+          <span class="auth-badge ${reviewerOpen ? "reviewer" : "viewer"}">검토자 등록 ${reviewerOpen ? "열림" : "닫힘"}</span>
+          <span class="auth-badge ${operatorOpen ? "operator" : "viewer"}">운영자 등록 ${operatorOpen ? "열림" : "닫힘"}</span>
         </div>
-        <p class="citizen-note">현재는 공개 열람과 익명 제보만 가능합니다. 검토표와 운영 큐 제어는 로그인 후 열립니다.</p>
+        <div class="auth-meta-row">
+          <span>${escapeHtml(countSummary)}</span>
+          <span>${passkeyReady ? "패스키 사용 가능" : "이 브라우저 또는 연결에서는 패스키를 쓸 수 없습니다."}</span>
+        </div>
+        <p class="citizen-note">현재는 공개 열람과 익명 제보만 가능합니다. 검토표와 운영 큐 제어는 패스키 로그인 후 열립니다.</p>
       `;
       return;
     }
@@ -983,6 +1140,8 @@
       </div>
       <div class="auth-meta-row">
         <span>로그인: ${escapeHtml(toDateLabel(session.createdAt))}</span>
+        <span>만료: ${escapeHtml(toDateLabel(session.expiresAt))}</span>
+        <span>${escapeHtml(countSummary)}</span>
       </div>
       <p class="citizen-note">${escapeHtml(roleConfig ? roleConfig.summary : "권한 설명 없음")}</p>
     `;
@@ -1702,7 +1861,7 @@
       }
 
       if (action === "delete") {
-        const shouldDelete = window.confirm("이 제보를 로컬 큐에서 삭제할까요?");
+        const shouldDelete = window.confirm(`${isBackendMode() ? "이 제보를 공유 큐에서 삭제할까요?" : "이 제보를 로컬 큐에서 삭제할까요?"}`);
         if (!shouldDelete) {
           return;
         }
@@ -2021,52 +2180,125 @@
   async function handleAuthSubmit(event) {
     event.preventDefault();
 
-    const alias = byId("auth-alias") ? byId("auth-alias").value.trim() : "";
+    if (!isBackendMode()) {
+      setAuthStatus("패스키 로그인은 동적 배포 서버에서만 동작합니다.", true);
+      return;
+    }
+
+    if (!isPasskeySupported()) {
+      setAuthStatus("이 브라우저 또는 연결에서는 패스키를 사용할 수 없습니다. HTTPS와 최신 브라우저를 확인하세요.", true);
+      return;
+    }
+
+    const submitter = event.submitter;
+    const action = submitter && submitter.dataset.authAction ? submitter.dataset.authAction : "login";
+    const alias = authAliasInput ? authAliasInput.value.trim() : "";
     const role = authRoleTarget ? authRoleTarget.value : "";
-    const accessKey = byId("auth-access-key") ? byId("auth-access-key").value.trim() : "";
-    const matchedKey = data.participation.accessControl.demoKeys.find((item) => {
-      return item.role === role && item.value === accessKey;
-    });
+    const inviteCode = authAccessKeyInput ? authAccessKeyInput.value.trim() : "";
 
-    if (!alias || !role || !accessKey) {
-      setAuthStatus("이름, 권한, 접근 키를 모두 입력해야 합니다.", true);
+    if (!alias) {
+      setAuthStatus("표시 이름을 입력해야 합니다.", true);
       return;
     }
 
-    if (!matchedKey) {
-      setAuthStatus("접근 키가 맞지 않습니다. 로컬 테스트 키를 확인하세요.", true);
-      return;
+    try {
+      if (action === "register") {
+        if (!role || !inviteCode) {
+          setAuthStatus("등록할 권한과 초대코드를 모두 입력해야 합니다.", true);
+          return;
+        }
+
+        setAuthStatus("패스키 등록 옵션을 불러오는 중입니다.", false);
+        const registerOptionsPayload = await fetchJson("/api/auth/register/options", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json"
+          },
+          body: JSON.stringify({
+            alias,
+            role,
+            inviteCode
+          })
+        });
+        const credential = await window.navigator.credentials.create({
+          publicKey: parseCreationOptions(registerOptionsPayload.options)
+        });
+
+        if (!credential) {
+          throw new Error("패스키 등록이 취소되었습니다.");
+        }
+
+        await apiRequest("/api/auth/register/verify", {
+          method: "POST",
+          body: {
+            alias,
+            role,
+            response: credentialToJson(credential)
+          }
+        });
+
+        setAuthStatus("패스키 등록과 로그인을 완료했습니다.", false);
+      } else {
+        setAuthStatus("패스키 로그인 옵션을 불러오는 중입니다.", false);
+        const loginOptionsPayload = await fetchJson("/api/auth/login/options", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json"
+          },
+          body: JSON.stringify({ alias })
+        });
+        const credential = await window.navigator.credentials.get({
+          publicKey: parseRequestOptions(loginOptionsPayload.options)
+        });
+
+        if (!credential) {
+          throw new Error("패스키 로그인이 취소되었습니다.");
+        }
+
+        await apiRequest("/api/auth/login/verify", {
+          method: "POST",
+          body: {
+            alias,
+            response: credentialToJson(credential)
+          }
+        });
+
+        setAuthStatus("패스키 로그인을 완료했습니다.", false);
+      }
+
+      renderAuthPanel();
+      renderReportList();
+      renderPublicBoard();
+      renderAuditLog();
+      authForm.reset();
+      if (authRoleTarget) {
+        authRoleTarget.selectedIndex = 0;
+      }
+    } catch (error) {
+      setAuthStatus(error.message || "패스키 처리 중 오류가 발생했습니다.", true);
     }
-
-    const session = {
-      id: `${role}:${alias.trim().toLowerCase()}`,
-      alias,
-      role,
-      createdAt: new Date().toISOString()
-    };
-
-    saveStoredSession(session);
-    await tryAppendAuditLog("login", `${alias} ${role} 로그인`, session, "");
-    renderAuthPanel();
-    renderReportList();
-    renderPublicBoard();
-    renderAuditLog();
-    setAuthStatus("검토 권한 세션을 열었습니다.", false);
-    authForm.reset();
-    authRoleTarget.selectedIndex = 0;
   }
 
   async function handleLogout() {
-    const session = getStoredSession();
-    if (session) {
-      await tryAppendAuditLog("logout", `${session.alias} 로그아웃`, session, "");
+    try {
+      if (isBackendMode()) {
+        await apiRequest("/api/auth/logout", {
+          method: "POST"
+        });
+      } else {
+        clearStoredSession();
+      }
+
+      renderAuthPanel();
+      renderReportList();
+      renderPublicBoard();
+      renderAuditLog();
+      setAuthStatus("세션을 종료했습니다.", false);
+    } catch (error) {
+      setAuthStatus(`로그아웃에 실패했습니다. ${error.message}`, true);
     }
-    clearStoredSession();
-    renderAuthPanel();
-    renderReportList();
-    renderPublicBoard();
-    renderAuditLog();
-    setAuthStatus("세션을 종료했습니다.", false);
   }
 
   async function exportReports() {
@@ -2105,11 +2337,11 @@
 
     const reports = getStoredReports();
     if (!reports.length) {
-      setReportStatus("비울 로컬 큐가 없습니다.", true);
+      setReportStatus(`${isBackendMode() ? "비울 공유 큐가 없습니다." : "비울 로컬 큐가 없습니다."}`, true);
       return;
     }
 
-    const shouldClear = window.confirm("로컬 큐의 모든 제보를 삭제할까요?");
+    const shouldClear = window.confirm(`${isBackendMode() ? "공유 큐의 모든 제보를 삭제할까요?" : "로컬 큐의 모든 제보를 삭제할까요?"}`);
     if (!shouldClear) {
       return;
     }

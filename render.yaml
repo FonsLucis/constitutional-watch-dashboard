@@ -15,6 +15,16 @@ services:
         value: /app/storage
       - key: NODE_ENV
         value: production
+      - key: WEBAUTHN_RP_NAME
+        value: RightOfResist
+      - key: WEBAUTHN_RP_ID
+        value: rightofresist.com
+      - key: WEBAUTHN_ORIGINS
+        value: https://rightofresist.com,https://www.rightofresist.com,https://constitutional-watch-dashboard-starter.onrender.com
+      - key: SESSION_TTL_HOURS
+        value: "168"
+      - key: AUTH_CHALLENGE_TTL_MINUTES
+        value: "10"
     disk:
       name: citizen-data
       mountPath: /app/storage

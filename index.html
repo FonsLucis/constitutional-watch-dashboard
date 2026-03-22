@@ -163,8 +163,8 @@
               <ol class="rule-list" id="participation-steps"></ol>
             </div>
             <p class="citizen-note">
-              제보는 이 브라우저의 로컬 저장소에만 임시 저장됩니다. 서버 전송은 아직 붙어 있지 않으므로, 운영자가 내보내기 후 별도 검증 큐로
-              옮겨야 합니다.
+              동적 배포 서버에서는 제보가 공유 저장소로 바로 반영됩니다. `DATABASE_URL`이 설정되면 Postgres에, 없으면 서버 파일 저장소에
+              기록됩니다.
             </p>
           </article>
 
@@ -243,9 +243,9 @@
         <div class="access-grid">
           <article class="citizen-card access-card">
             <p class="card-kicker">Review Access</p>
-            <h3>검토자 로그인</h3>
+            <h3>패스키 로그인</h3>
             <p class="citizen-note">
-              익명 제보는 로그인 없이 가능하지만, 검증 상태를 바꾸는 표결과 운영 큐 제어는 로그인된 검토자 또는 운영자만 수행합니다.
+              익명 제보는 로그인 없이 가능하지만, 검증 상태를 바꾸는 표결과 운영 큐 제어는 패스키로 인증된 검토자 또는 운영자만 수행합니다.
             </p>
             <ul class="plain-list" id="auth-rules"></ul>
             <div class="auth-summary" id="auth-summary"></div>
@@ -260,12 +260,13 @@
                   <select id="auth-role-target" required></select>
                 </label>
                 <label class="field field-wide">
-                  <span>접근 키</span>
-                  <input id="auth-access-key" type="text" maxlength="80" placeholder="로컬 테스트 키 입력" required>
+                  <span>초대코드</span>
+                  <input id="auth-access-key" type="text" maxlength="120" placeholder="등록 시에만 필요" autocomplete="one-time-code">
                 </label>
               </div>
               <div class="form-actions">
-                <button class="action-button" type="submit">로그인</button>
+                <button class="action-button" type="submit" data-auth-action="login">패스키 로그인</button>
+                <button class="ghost-button" type="submit" data-auth-action="register">패스키 등록</button>
                 <button class="ghost-button" id="auth-logout" type="button">로그아웃</button>
               </div>
               <p id="auth-form-status" class="form-status" aria-live="polite"></p>
@@ -277,7 +278,7 @@
             <p class="card-kicker">Audit Trail</p>
             <h3>감사 로그</h3>
             <p class="citizen-note">
-              로그인, 공개 전환, 표결, 메모 추가 같은 민감 동작은 로컬 감사 로그에 남겨 조작과 운영 개입 흔적을 추적합니다.
+              로그인, 공개 전환, 표결, 메모 추가 같은 민감 동작은 서버 감사 로그에 남겨 조작과 운영 개입 흔적을 추적합니다.
             </p>
             <div class="queue-stats" id="audit-stats"></div>
             <div class="audit-list" id="audit-list"></div>
@@ -287,12 +288,12 @@
         <div class="citizen-queue">
           <div class="queue-head">
             <div>
-              <p class="card-kicker">Local Queue</p>
-              <h3>로컬 제보 큐</h3>
+              <p class="card-kicker">Shared Queue</p>
+              <h3>공유 제보 큐</h3>
             </div>
             <div class="queue-actions">
               <button id="export-reports" class="ghost-button" type="button">JSON 내보내기</button>
-              <button id="clear-reports" class="ghost-button danger-ghost" type="button">로컬 큐 비우기</button>
+              <button id="clear-reports" class="ghost-button danger-ghost" type="button">공유 큐 비우기</button>
             </div>
           </div>
           <div class="queue-stats" id="citizen-stats"></div>

@@ -2,6 +2,7 @@
 *.zip
 .env
 .env.*
+node_modules/
 deploy/
 deploy-backend/
 deploy-dynamic/
